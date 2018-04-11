@@ -90,7 +90,9 @@ namespace VolumeMixer
                     byte[] bitfield = new byte[1];
                     bitfield[0]=0;
                     int bitfieldSize = 0;
+                    port1.DiscardInBuffer();
                     port1.WriteLine("I");
+                    int comptador = 0;
                     for (int i = 0; i < 32; i++)
                     {
                         for (int j = 0; j < 32; j++)
@@ -99,15 +101,26 @@ namespace VolumeMixer
                             int valor = (int)(((double)pixelTemp.R + (double)pixelTemp.G + (double)pixelTemp.B) * ((double)pixelTemp.A / 255.0f));
                             valor /= 3;
                             char pixel = (char)valor;
-                            //bitfield[0] = (byte)((bitfield[0] << 1) | (pixel > (255 * 3 / 2) ? 1 : 0));
-                            bitfield[0] = (byte)((bitfield[0] << 1) | (j%2==0?1:0));
+                            bitfield[0] = (byte)((bitfield[0] << 1) | (pixel > (127 * 3 / 2) ? 1 : 0));
+                            //bitfield[0] = (byte)((bitfield[0] << 1) | (j%2==0?0:1));
                             bitfieldSize++;
                             if (bitfieldSize == 8)
                             {
                                 bitfieldSize = 0;
+                                Console.WriteLine("Writing line " + comptador/8 + " : " + bitfield);
                                 port1.Write(bitfield, 0, 1);
+                                string readResult = "";
+                                while (readResult!="ACK") {
+                                    Console.WriteLine("Waiting for ACK");
+                                    //Thread.Sleep(1);
+                                    while (port1.BytesToRead == 0) { }
+                                    readResult=port1.ReadLine();
+                                }
+                                
+                                Console.WriteLine("ACK received");
                                 bitfield[0] = 0;
                             }
+                            comptador++;
                         }
                     }
                     //port1.WriteLine("I");//Imatge

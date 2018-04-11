@@ -98,20 +98,26 @@ void tractarEntrada(){
       break;
     }
     case 'I':{// Program Image
-      while(!Serial.available()){}
       for(int i=0;i<128;i++){
+        while(!Serial.available()){}
         image[i]=Serial.read();
         Serial.read(); // netejem el \0
+        Serial.write("ACK\n");
       }
       displayData();
       break;
     }
     case 'M':{// Set Mode
       while(!Serial.available()){}
+      
       setMode=Serial.readStringUntil('\n')=="SET";
       digitalWrite(LED_BUILTIN, setMode?HIGH:LOW);
       redrawSetMode();
       redrawSlider();
+      break;
+    }
+    default:{
+      Serial.flush();
       break;
     }
   }
