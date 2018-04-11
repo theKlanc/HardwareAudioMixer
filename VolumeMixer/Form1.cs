@@ -22,7 +22,7 @@ namespace VolumeMixer
         public Form1()
         {
             InitializeComponent();
-            port1 = new SerialPort("COM17", 4800);
+            port1 = new SerialPort("COM17", 115200);
             port1.Open();
             defaultPlaybackDevice = new CoreAudioController().DefaultPlaybackDevice;
             appActual = defaultPlaybackDevice.SessionController.ToArray()[actual];
@@ -109,7 +109,6 @@ namespace VolumeMixer
                                 bitfield[0] = 0;
                             }
                         }
-                        Thread.Sleep(100);
                     }
                     //port1.WriteLine("I");//Imatge
                     //port1.WriteLine(image);

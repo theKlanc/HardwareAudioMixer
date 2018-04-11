@@ -21,7 +21,7 @@ bool switchButton, upButton, downButton, setMode;
 Adafruit_SSD1306 display(7);
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(4800);
+  Serial.begin(115200);
   pinMode(switchPin,INPUT);
   pinMode(upPin,INPUT);
   pinMode(downPin,INPUT);
@@ -138,4 +138,5 @@ void loop() {
     redrawSlider();
   }
   analogOld=analog;
+  delay(20);
 }
