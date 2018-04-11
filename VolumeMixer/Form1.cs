@@ -67,7 +67,7 @@ namespace VolumeMixer
             if (upButton && !lastUp || downButton && !lastDown) //SI CANVIEM D APP
             {
                 adjustMode = false;
-                port1.WriteLine("M");//Mode
+                port1.WriteLine("M");
                 port1.WriteLine(adjustMode ? "SET" : "NOT");//Mode
                 actual = (actual + 1) % defaultPlaybackDevice.SessionController.ToArray().Length;
                 appActual = defaultPlaybackDevice.SessionController.ToArray()[actual];
@@ -87,8 +87,8 @@ namespace VolumeMixer
                 port1.WriteLine(label1.Text.Length <= 15 ? label1.Text : label1.Text.Substring(0, 14));
                 if (label1.Text != "----" && appActual.ExecutablePath != null)
                 {
-                    string image = "";
-                    char bitfield = (char)0;
+                    byte[] bitfield = new byte[1];
+                    bitfield[0]=0;
                     int bitfieldSize = 0;
                     port1.WriteLine("I");
                     for (int i = 0; i < 32; i++)
@@ -99,29 +99,18 @@ namespace VolumeMixer
                             int valor = (int)(((double)pixelTemp.R + (double)pixelTemp.G + (double)pixelTemp.B) * ((double)pixelTemp.A / 255.0f));
                             valor /= 3;
                             char pixel = (char)valor;
-                            bitfield = (char)((bitfield << 1) | (pixel > (255 * 3 / 2) ? 1 : 0));
+                            //bitfield[0] = (byte)((bitfield[0] << 1) | (pixel > (255 * 3 / 2) ? 1 : 0));
+                            bitfield[0] = (byte)((bitfield[0] << 1) | (j%2==0?1:0));
                             bitfieldSize++;
                             if (bitfieldSize == 8)
                             {
-                                image += pixel;
                                 bitfieldSize = 0;
-                                //bitfield = (char)0;
-                                bitfield = (char)((pixel / 127 * 9) != 0 ? 1 : 0);
+                                port1.Write(bitfield, 0, 1);
+                                bitfield[0] = 0;
                             }
-                            Console.WriteLine(((pixel / 127 * 9) != 0 ? '1' : '0').ToString());
-                            port1.WriteLine(((pixel / 127 * 9) != 0 ? '1' : '0').ToString());
-
                         }
-                        Thread.Sleep(50);
+                        Thread.Sleep(100);
                     }
-
-                    //Console.WriteLine(image);
-                    FileStream fs = File.Create("imatge.dat", 2048, FileOptions.None);
-                    BinaryWriter bw = new BinaryWriter(fs);
-                    bw.Write(image);
-                    bw.Close();
-                    fs.Close();
-
                     //port1.WriteLine("I");//Imatge
                     //port1.WriteLine(image);
                 }

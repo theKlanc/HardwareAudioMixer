@@ -75,7 +75,7 @@ void displayData(){
   display.println(text);
   display.display();
   if(text!="----"){
-    display.drawBitmap(0, 0,(unsigned char*)image, 32, 32, 1);
+    display.drawBitmap(0, 0,(unsigned char*)image, 32, 32, WHITE);
     display.display();
   }
   redrawSlider();
@@ -100,14 +100,8 @@ void tractarEntrada(){
     case 'I':{// Program Image
       while(!Serial.available()){}
       for(int i=0;i<128;i++){
-        display.setCursor(0,0);
-        display.clearDisplay();
-        for(int j=0;j<8;j++){
-          char temp=Serial.readStringUntil('\n')[0];
-          image[i]=((image[i] << 1) | (j%2==0?B00000001:B00000000));    
-        }
-        display.print(i); 
-        display.display();
+        image[i]=Serial.read();
+        Serial.read(); // netejem el \0
       }
       displayData();
       break;
