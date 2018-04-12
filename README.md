@@ -8,6 +8,7 @@ Schematics for the hardware will eventually be created, along with .cad files fo
 ## Instructions
 
 S00n (tm)
+
 If you wanna try it in its rough state, look at the .ino file and figure out the pins I'm using, it should be quite easy.
 
 ## TO-DO
