@@ -14,6 +14,13 @@ If you wanna try it in its rough state, look at the .ino file and figure out the
 ## TO-DO
 
 Scroll text that is too long
+
 Show app name underneath app title if different
+
 Figure out how to get app icons flawlessly (Chrome not working p.e.)
+
 Fix edgeDetector to suit my needs
+
+Understand what is actually getting transmitted on each Serial.read / write and optimize
+
+Switch to C++, eventually
