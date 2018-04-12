@@ -36,6 +36,89 @@ namespace VolumeMixer
             }
             catch { }
         }
+        private void enviarMode()
+        {
+            port1.WriteLine("M");//Mode
+            port1.WriteLine(adjustMode ? "SET" : "NOT");
+        }
+        private void enviarNom()
+        {
+            port1.WriteLine("N");//NOM                
+            port1.WriteLine(label1.Text.Length <= 15 ? label1.Text : label1.Text.Substring(0, 14));
+        }
+        private void enviarImatge()
+        {
+            byte[] bitfield = new byte[1];
+            bitfield[0] = 0;
+            int bitfieldSize = 0;
+            port1.DiscardInBuffer();
+            port1.WriteLine("I");
+            int comptador = 0;
+            Bitmap imatge = null;
+            if(appActual.ExecutablePath != null)
+            {
+                imatge = Icon.ExtractAssociatedIcon(appActual.ExecutablePath).ToBitmap();
+            }
+            else
+            {
+                imatge = (Bitmap)Bitmap.FromFile("error.bmp");
+            }
+            /*for (int i = 0; i < 32; i++)
+            {
+                for (int j = 0; j < 32; j++)
+                {
+                    var pixelTemp = imatge.GetPixel(i, j);
+                    int valor = (int)(((double)pixelTemp.R + (double)pixelTemp.G + (double)pixelTemp.B) * ((double)pixelTemp.A / 255.0f));
+                    valor /= 3;
+                    char pixel = (char)valor;
+                    bitfield[0] = (byte)((bitfield[0] << 1) | (pixel > (127 * 3 / 2) ? 1 : 0));
+                    //bitfield[0] = (byte)((bitfield[0] << 1) | (j%2==0?0:1)); DEBUG PATTERN
+                    bitfieldSize++;
+                    if (bitfieldSize == 8)
+                    {
+                        bitfieldSize = 0;
+                        port1.Write(bitfield, 0, 1);
+                        string readResult = "";
+                        while (readResult != "ACK")
+                        {
+                            while (port1.BytesToRead == 0) { }
+                            readResult = port1.ReadLine();
+                        }
+                        bitfield[0] = 0;
+                    }
+                    comptador++;
+                }
+            }*/
+            Bitmap edge = EdgeDetect(imatge);
+            for (int i = 0; i < 32; i++)
+            {
+                for (int j = 0; j < 32; j++)
+                {
+                    var pixelTemp = edge.GetPixel(i, j);
+                    bitfield[0] = (byte)((bitfield[0] << 1) | (pixelTemp.R == 255 ? 1 : 0));
+                    bitfieldSize++;
+                    if (bitfieldSize == 8)
+                    {
+                        bitfieldSize = 0;
+                        port1.Write(bitfield, 0, 1);
+                        string readResult = "";
+                        while (readResult != "ACK")
+                        {
+                            while (port1.BytesToRead == 0) { }
+                            readResult = port1.ReadLine();
+                        }
+                        bitfield[0] = 0;
+                    }
+                    comptador++;
+                }
+            }
+        }
+        private void enviarDades()
+        {
+            enviarMode();
+            enviarNom();
+            enviarImatge();
+        }
         private void timer1_Tick(object sender, EventArgs e)
         {
             string entradaS = port1.ReadLine();
@@ -53,79 +136,40 @@ namespace VolumeMixer
             if (!connected)
             {
                 connected = true;
-                port1.WriteLine("M");//Mode
-                port1.WriteLine(adjustMode ? "SET" : "NOT");//Mode
-                port1.WriteLine("N");//NOM                
-                port1.WriteLine(label1.Text.Length <= 15 ? label1.Text : label1.Text.Substring(0, 14));
+                enviarDades();
             }
             if (setButton && setButton != lastSet)
             {
                 adjustMode = !adjustMode;
-                port1.WriteLine("M");//Mode
-                port1.WriteLine(adjustMode ? "SET" : "NOT");//Mode
+                enviarMode();
             }
             if (upButton && !lastUp || downButton && !lastDown) //SI CANVIEM D APP
             {
                 adjustMode = false;
-                port1.WriteLine("M");
-                port1.WriteLine(adjustMode ? "SET" : "NOT");//Mode
-                actual = (actual + 1) % defaultPlaybackDevice.SessionController.ToArray().Length;
+                actual = (actual + (upButton?downButton?0:1:downButton?actual==0? defaultPlaybackDevice.SessionController.ToArray().Length -1: -1:0)) % defaultPlaybackDevice.SessionController.ToArray().Length;
                 appActual = defaultPlaybackDevice.SessionController.ToArray()[actual];
                 try
                 {
                     label1.Text = Process.GetProcessById(appActual.ProcessId).MainWindowTitle;
-                    label1.Text = (label1.Text.Length == 0 ? "----" : label1.Text);
+                    Console.WriteLine(appActual.IconPath);
+                    Console.WriteLine(appActual.ExecutablePath);
+                    label1.Text = (appActual.IconPath.Contains("@%SystemRoot%\\System32\\AudioSrv.Dll")?"System Sounds":label1.Text.Length == 0 ? "----" : label1.Text);
                     label2.Text = appActual.ExecutablePath;
                     progressBar1.Value = (int)appActual.Volume;
                     pictureBox1.Image = null;
-                    pictureBox1.Image = Icon.ExtractAssociatedIcon(appActual.ExecutablePath).ToBitmap();
+                    pictureBox1.Image = EdgeDetect(Icon.ExtractAssociatedIcon(appActual.ExecutablePath).ToBitmap());
                     pictureBox1.Update();
                 }
                 catch { }
-                //ENVIEM DADES CAP AL ARDUINO
+                port1.WriteLine("M");
+                port1.WriteLine(adjustMode ? "SET" : "NOT");//Mode
                 port1.WriteLine("N");//NOM
                 port1.WriteLine(label1.Text.Length <= 15 ? label1.Text : label1.Text.Substring(0, 14));
-                if (label1.Text != "----" && appActual.ExecutablePath != null)
-                {
-                    byte[] bitfield = new byte[1];
-                    bitfield[0]=0;
-                    int bitfieldSize = 0;
-                    port1.DiscardInBuffer();
-                    port1.WriteLine("I");
-                    int comptador = 0;
-                    for (int i = 0; i < 32; i++)
-                    {
-                        for (int j = 0; j < 32; j++)
-                        {
-                            var pixelTemp = Icon.ExtractAssociatedIcon(appActual.ExecutablePath).ToBitmap().GetPixel(i, j);
-                            int valor = (int)(((double)pixelTemp.R + (double)pixelTemp.G + (double)pixelTemp.B) * ((double)pixelTemp.A / 255.0f));
-                            valor /= 3;
-                            char pixel = (char)valor;
-                            bitfield[0] = (byte)((bitfield[0] << 1) | (pixel > (127 * 3 / 2) ? 1 : 0));
-                            //bitfield[0] = (byte)((bitfield[0] << 1) | (j%2==0?0:1));
-                            bitfieldSize++;
-                            if (bitfieldSize == 8)
-                            {
-                                bitfieldSize = 0;
-                                Console.WriteLine("Writing line " + comptador/8 + " : " + bitfield);
-                                port1.Write(bitfield, 0, 1);
-                                string readResult = "";
-                                while (readResult!="ACK") {
-                                    Console.WriteLine("Waiting for ACK");
-                                    //Thread.Sleep(1);
-                                    while (port1.BytesToRead == 0) { }
-                                    readResult=port1.ReadLine();
-                                }
-                                
-                                Console.WriteLine("ACK received");
-                                bitfield[0] = 0;
-                            }
-                            comptador++;
-                        }
-                    }
-                    //port1.WriteLine("I");//Imatge
-                    //port1.WriteLine(image);
-                }
+                //if (label1.Text != "----" && appActual.ExecutablePath != null)
+                //{
+
+                    enviarImatge();
+                //}
             }
             if (adjustMode)
             {
@@ -150,7 +194,7 @@ namespace VolumeMixer
             int position;
             int[,] gx = new int[,] { { -1, 0, 1 }, { -2, 0, 2 }, { -1, 0, 1 } };
             int[,] gy = new int[,] { { 1, 2, 1 }, { 0, 0, 0 }, { -1, -2, -1 } };
-            byte Threshold = 128;
+            int Threshold = 500;
 
             Bitmap dstBmp = new Bitmap(width, height, original.PixelFormat);
             BitmapData dstData = dstBmp.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadWrite, dstBmp.PixelFormat);
@@ -179,10 +223,17 @@ namespace VolumeMixer
                         }
                         position = ((i * width + j) * OneColorBits);
                         if (NewX * NewX + NewY * NewY > Threshold * Threshold)
+                        {
                             dst[position] = dst[position + 1] = dst[position + 2] = 255;
+                            //Console.Write("1");
+                        }
                         else
+                        {
                             dst[position] = dst[position + 1] = dst[position + 2] = 0;
+                           // Console.Write("0");
+                        }
                     }
+                    //Console.WriteLine("");
                 }
             }
             original.UnlockBits(bmpData);
