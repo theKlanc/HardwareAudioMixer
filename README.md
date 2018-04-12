@@ -5,6 +5,11 @@ HardwareAudioMixer is a repo containing code necessary to create a dedicated Win
 Pics/demos to come soon.
 Schematics for the hardware will eventually be created, along with .cad files for an enclosure, if made.
 
+## Instructions
+
+S00n (tm)
+If you wanna try it in its rough state, look at the .ino file and figure out the pins I'm using, it should be quite easy.
+
 ## TO-DO
 
 Scroll text that is too long
