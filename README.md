@@ -23,4 +23,6 @@ Fix edgeDetector to suit my needs
 
 Understand what is actually getting transmitted on each Serial.read / write and optimize
 
+Get rid of the debug GUI and console
+
 Switch to C++, eventually
