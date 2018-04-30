@@ -1,8 +1,8 @@
 # HardwareAudioMixer
 ## What is this?
 
-HardwareAudioMixer is a repo containing code necessary to create a dedicated Windows audio mixer hardware controller, by using an arduino (nano), a rotary encoder, a i2c display and 3 mechanical buttons.
-Pics/demos to come soon.
+HardwareAudioMixer is a repo containing code necessary to create a dedicated Windows audio mixer hardware controller using an arduino nano, a rotary encoder, an i2c display and 3 mechanical buttons.
+Pics/demos to come soon (or not).
 Schematics for the hardware will eventually be created, along with .cad files for an enclosure, if made.
 
 ## Instructions
